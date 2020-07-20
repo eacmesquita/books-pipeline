@@ -1,0 +1,23 @@
+﻿apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: promote-to-staging
+spec:
+  params:
+    - name: devProject
+      type: string
+    - name: stageProject
+      type: string
+    - name: appName
+      type: string
+  steps:
+    - args:
+        - >-
+          oc tag $(inputs.params.devProject)/$(inputs.params.appName):latest
+          $(inputs.params.stageProject)/$(inputs.params.appName):stage
+      command:
+        - /bin/bash
+        - '-c'
+      image: 'quay.io/openshift/origin-cli:latest'
+      name: ''
+      resources: {}

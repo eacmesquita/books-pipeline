@@ -1,0 +1,27 @@
+﻿apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: deploy-to-staging
+spec:
+  params:
+    - name: appName
+      type: string
+    - name: stageProject
+      type: string
+  steps:
+    - args:
+        - |-
+          echo '### Cleaning existing resources in Staging ###'
+          oc project $(inputs.params.stageProject)
+          oc delete all -l app=$(inputs.params.appName)
+          sleep 5
+          echo '### Creating a new app in Staging ###'
+          oc project $(inputs.params.stageProject)
+          oc new-app --name books -i books:stage
+          oc expose svc/$(inputs.params.appName)
+      command:
+        - /bin/bash
+        - '-c'
+      image: 'quay.io/openshift/origin-cli:latest'
+      name: ''
+      resources: {}

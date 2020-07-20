@@ -1,0 +1,37 @@
+﻿apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: node-ci
+spec:
+  resources:
+    inputs:
+      - name: git-repo
+        type: git
+  steps:
+    - args:
+        - npm install
+      command:
+        - /bin/sh
+        - '-c'
+      image: node
+      name: install
+      resources: {}
+      workingDir: /workspace/git-repo/books
+    - args:
+        - npm test
+      command:
+        - /bin/sh
+        - '-c'
+      image: node
+      name: unit-test
+      resources: {}
+      workingDir: /workspace/git-repo/books
+    - args:
+        - npm run lint
+      command:
+        - /bin/sh
+        - '-c'
+      image: node
+      name: linting
+      resources: {}
+      workingDir: /workspace/git-repo/books

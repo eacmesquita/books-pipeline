@@ -1,0 +1,35 @@
+﻿apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: wait-for-build
+spec:
+  params:
+    - name: appName
+      type: string
+    - name: devProject
+      type: string
+  steps:
+    - args:
+        - >-
+          while true;do  echo Looking for $(inputs.params.appName) builds in
+          $(inputs.params.devProject); builds=$(oc get build -l
+          app=$(inputs.params.appName) -n $(inputs.params.devProject)); if [ -z
+          "$builds" ]; then echo 'No builds found yet'; sleep 30; continue; else
+          echo "Builds found: $builds"; fi; completed=$(echo $builds | awk
+          'FNR>1 {print $4}' | grep -v Complete)
+
+          if [ -z "$completed" ];then break;fi
+
+          echo 'Waiting 15 seconds to re-check status'
+
+          sleep 15
+
+          done
+
+          echo 'S2I build completed!'
+      command:
+        - /bin/bash
+        - '-c'
+      image: 'quay.io/openshift/origin-cli:latest'
+      name: waiting
+      resources: {}

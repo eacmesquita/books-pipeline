@@ -1,0 +1,39 @@
+﻿apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: launch-app
+spec:
+  params:
+    - name: appName
+      type: string
+    - name: devProject
+      type: string
+  resources:
+    inputs:
+      - name: git-repo
+        type: git
+  steps:
+    - args:
+        - >-
+          echo '### Cleaning existing resources in DEV env ###'
+
+          oc project $(inputs.params.devProject)
+
+          oc delete all -l app=$(inputs.params.appName)
+
+          sleep 5
+
+          echo '### Creating a new app in DEV env ###'
+
+          oc project $(inputs.params.devProject)
+
+          oc new-app --name books nodejs~$(inputs.resources.git-repo.url)
+          --context-dir $(inputs.params.appName) --strategy=source
+
+          oc expose svc/$(inputs.params.appName)
+      command:
+        - /bin/bash
+        - '-c'
+      image: 'quay.io/openshift/origin-cli:latest'
+      name: launching
+      resources: {}

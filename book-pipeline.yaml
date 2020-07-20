@@ -1,0 +1,94 @@
+﻿apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: books-pipeline
+spec:
+  params:
+    - name: devProject
+      type: string
+    - name: stageProject
+      type: string
+  resources:
+    - name: git-repo
+      type: git
+  tasks:
+    - name: node-ci
+      resources:
+        inputs:
+          - name: git-repo
+            resource: git-repo
+      taskRef:
+        kind: Task
+        name: node-ci
+    - name: launch-app
+      params:
+        - name: appName
+          value: books
+        - name: devProject
+          value: $(params.devProject)
+      resources:
+        inputs:
+          - name: git-repo
+            resource: git-repo
+      runAfter:
+        - node-ci
+      taskRef:
+        kind: Task
+        name: launch-app
+    - name: wait-for-build
+      params:
+        - name: appName
+          value: books
+        - name: devProject
+          value: $(params.devProject)
+      runAfter:
+        - launch-app
+      taskRef:
+        kind: Task
+        name: wait-for-build
+    - name: wait-for-dev-deployment
+      params:
+        - name: appName
+          value: books
+        - name: devProject
+          value: $(params.devProject)
+      runAfter:
+        - wait-for-build
+      taskRef:
+        kind: Task
+        name: wait-for-dev-deployment
+    - name: promote-to-staging
+      params:
+        - name: devProject
+          value: $(params.devProject)
+        - name: stageProject
+          value: $(params.stageProject)
+        - name: appName
+          value: books
+      runAfter:
+        - wait-for-dev-deployment
+      taskRef:
+        kind: Task
+        name: promote-to-staging
+    - name: deploy-to-staging
+      params:
+        - name: appName
+          value: books
+        - name: stageProject
+          value: $(params.stageProject)
+      runAfter:
+        - promote-to-staging
+      taskRef:
+        kind: Task
+        name: deploy-to-staging
+    - name: wait-for-staging-deployment
+      params:
+        - name: appName
+          value: books
+        - name: stageProject
+          value: $(params.stageProject)
+      runAfter:
+        - deploy-to-staging
+      taskRef:
+        kind: Task
+        name: wait-for-staging-deployment
