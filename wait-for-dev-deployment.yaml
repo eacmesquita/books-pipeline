@@ -11,16 +11,9 @@ spec:
   steps:
     - args:
         - >-
-          echo Checking pods of $(inputs.params.appName);
-
-          while true; do pods=$(oc get pods -l
-          deployment=$(inputs.params.appName) -n $(inputs.params.devProject) );
-          if [ -z "$pods" ];then echo "Pods not created yet"; sleep 20;
-          continue;fi; pod_status=$(oc get pods -l
-          deployment=$(inputs.params.appName) -n $(inputs.params.devProject) |
-          awk 'FNR>1 {print $3}'); echo "Pod status: $pod_status";  if ! grep
-          -qv 'Running'<<<"$pod_status";then echo 'All pods ready';break;else
-          sleep 10;fi done
+          echo Waiting for deployment to $(inputs.params.devProject);
+          oc wait --for condition=available --timeout=600s deployment/$(inputs.params.appName) -n $(inputs.params.devProject);
+          echo Deployment completed
       command:
         - /bin/bash
         - '-c'
