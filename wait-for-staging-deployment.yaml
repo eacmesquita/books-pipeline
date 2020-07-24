@@ -13,7 +13,7 @@ spec:
         - >-
           echo Waiting for deployment to staging; 
           oc wait --for condition=available --timeout=600s deployment/$(inputs.params.appName) -n $(inputs.params.stageProject);   
-          route=$(oc get route books | awk 'FNR==2 {print
+          route=$(oc get route books -n $(inputs.params.stageProject) | awk 'FNR==2 {print
           $2}'); echo "Deployment to Staging env is complete. Access at
           http://$route";
       command:
